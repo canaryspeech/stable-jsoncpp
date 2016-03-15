@@ -1,5 +1,5 @@
 """
-Notes: 
+Notes:
 - shared library support is buggy: it assumes that a static and dynamic library can be build from the same object files. This is not true on many platforms. For this reason it is only enabled on linux-gcc at the current time.
 
 To add a platform:
@@ -18,7 +18,7 @@ options = Variables()
 options.Add( EnumVariable('platform',
                         'Platform (compiler/stl) used to build the project',
                         'msvc71',
-                        allowed_values='suncc vacpp mingw msvc6 msvc7 msvc71 msvc80 msvc90 linux-gcc'.split(),
+                        allowed_values='android suncc vacpp mingw msvc6 msvc7 msvc71 msvc80 msvc90 linux-gcc'.split(),
                         ignorecase=2) )
 
 try:
@@ -28,6 +28,15 @@ try:
         import commands
         version = commands.getoutput('%s -dumpversion' %CXX)
         platform = 'linux-gcc-%s' %version
+        print "Using platform '%s'" %platform
+        LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH', '')
+        LD_LIBRARY_PATH = "%s:libs/%s" %(LD_LIBRARY_PATH, platform)
+        os.environ['LD_LIBRARY_PATH'] = LD_LIBRARY_PATH
+        print "LD_LIBRARY_PATH =", LD_LIBRARY_PATH
+    elif platform == 'android':
+        CXX = os.environ.get('CXX')
+        import commands
+        version = commands.getoutput('%s -dumpversion' %CXX)
         print "Using platform '%s'" %platform
         LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH', '')
         LD_LIBRARY_PATH = "%s:libs/%s" %(LD_LIBRARY_PATH, platform)
@@ -54,20 +63,31 @@ if not os.path.exists( sconsign_dir_path ):
 SConsignFile( sconsign_path )
 
 def make_environ_vars():
-	"""Returns a dictionnary with environment variable to use when compiling."""
-	# PATH is required to find the compiler
-	# TEMP is required for at least mingw
+    """Returns a dictionnary with environment variable to use when compiling."""
+    # PATH is required to find the compiler
+    # TEMP is required for at least mingw
     # LD_LIBRARY_PATH & co is required on some system for the compiler
-	vars = {}
-	for name in ('PATH', 'TEMP', 'TMP', 'LD_LIBRARY_PATH', 'LIBRARY_PATH'):
-		if name in os.environ:
-			vars[name] = os.environ[name]
-	return vars
-	
+    vars = {}
+    for name in ('PATH', 'TEMP', 'TMP', 'LD_LIBRARY_PATH', 'LIBRARY_PATH'):
+	    if name in os.environ:
+		    vars[name] = os.environ[name]
+    return vars
+
+def append_android_vars(platform, env):
+    if platform == 'android':
+        env.Replace(CC = os.environ.get('CC'))
+        env.Replace(AR = os.environ.get('AR'))
+        env.Replace(AS = os.environ.get('AS'))
+        env.Replace(CXX = os.environ.get('CXX'))
+        env.Replace(LD = os.environ.get('LD'))
+        env.Replace(RANLIB = os.environ.get('RANLIB'))
+
 
 env = Environment( ENV = make_environ_vars(),
                    toolpath = ['scons-tools'],
                    tools=[] ) #, tools=['default'] )
+
+append_android_vars(platform, env)
 
 if platform == 'suncc':
     env.Tool( 'sunc++' )
@@ -121,6 +141,11 @@ elif platform.startswith('linux-gcc'):
     env.Tool( 'default' )
     env.Append( LIBS = ['pthread'], CCFLAGS = os.environ.get("CXXFLAGS", "-Wall"), LINKFLAGS=os.environ.get("LDFLAGS", "") )
     env['SHARED_LIB_ENABLED'] = True
+elif platform == 'android':
+    env.Tool( 'default' )
+    # android toolchain has pthread built in.
+    env.Append( CCFLAGS = os.environ.get("CXXFLAGS", "-Wall"), LINKFLAGS=os.environ.get("LDFLAGS", "") )
+    env['SHARED_LIB_ENABLED'] = False
 else:
     print "UNSUPPORTED PLATFORM."
     env.Exit(1)
@@ -162,7 +187,7 @@ else: # If tarfile module is missing
 			pass
 env['SRCDIST_ADD'] = SrcDistAdder( env )
 env['SRCDIST_TARGET'] = os.path.join( DIST_DIR, 'jsoncpp-src-%s.tar.gz' % env['JSONCPP_VERSION'] )
-                      
+
 env_testing = env.Clone( )
 env_testing.Append( LIBS = ['json_${LIB_NAME_SUFFIX}'] )
 
@@ -182,7 +207,7 @@ def buildJSONTests( env, target_sources, target_name ):
 
 def buildUnitTests( env, target_sources, target_name ):
     jsontests_node = buildJSONExample( env, target_sources, target_name )
-    check_alias_target = env.Alias( 'check', jsontests_node, 
+    check_alias_target = env.Alias( 'check', jsontests_node,
                                     RunUnitTests( jsontests_node, jsontests_node ) )
     env.AlwaysBuild( check_alias_target )
 
@@ -241,8 +266,12 @@ srcdist_cmd = env['SRCDIST_ADD']( source = """
     """.split() )
 env.Alias( 'src-dist', srcdist_cmd )
 
-buildProjectInDirectory( 'src/jsontestrunner' )
-buildProjectInDirectory( 'src/lib_json' )
-buildProjectInDirectory( 'src/test_lib_json' )
-#print env.Dump()
 
+build_tests = True
+# we do not build and run tests for android.
+if platform == 'android': build_tests=False
+
+if build_tests: buildProjectInDirectory( 'src/jsontestrunner' )
+buildProjectInDirectory( 'src/lib_json' )
+if build_tests: buildProjectInDirectory( 'src/test_lib_json' )
+#print env.Dump()
