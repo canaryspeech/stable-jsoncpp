@@ -19,5 +19,5 @@ export RANLIB=${TOOLCHAIN_PREFIX}-ranlib
 export TOOLCHAIN_BASE=$TOOLCHAIN_BASE
 
 CXXFLAGS='-fPIC' scons platform=android
-cp ./libs/android/libjson_android_libmt.a $INSTALL_PREFIX/lib
+cp ./libs/android/libjson_android_libmt.a $INSTALL_PREFIX/lib/libjson_cpp.a
 cp -r ./include/json $INSTALL_PREFIX/include/
