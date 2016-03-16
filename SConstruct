@@ -35,6 +35,7 @@ try:
         print "LD_LIBRARY_PATH =", LD_LIBRARY_PATH
     elif platform == 'android':
         CXX = os.environ.get('CXX')
+
         import commands
         version = commands.getoutput('%s -dumpversion' %CXX)
         print "Using platform '%s'" %platform
@@ -87,7 +88,6 @@ env = Environment( ENV = make_environ_vars(),
                    toolpath = ['scons-tools'],
                    tools=[] ) #, tools=['default'] )
 
-append_android_vars(platform, env)
 
 if platform == 'suncc':
     env.Tool( 'sunc++' )
@@ -146,6 +146,7 @@ elif platform == 'android':
     # android toolchain has pthread built in.
     env.Append( CCFLAGS = os.environ.get("CXXFLAGS", "-Wall"), LINKFLAGS=os.environ.get("LDFLAGS", "") )
     env['SHARED_LIB_ENABLED'] = False
+    append_android_vars(platform, env)
 else:
     print "UNSUPPORTED PLATFORM."
     env.Exit(1)
