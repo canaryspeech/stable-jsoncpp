@@ -3,7 +3,7 @@ set -x
 rm -rf buildscons
 TOOLCHAIN_BASE=${1:-/tmp/my-android-toolchain/}
 COMPILER_PREFIX=${2:-arm-linux-androideabi}
-INSTALL_PREFIX=${3:/opt/arm-tools}
+INSTALL_PREFIX=${3:-/opt/arm-tools}
 
 TOOLCHAIN_BIN=$TOOLCHAIN_BASE/bin/
 
@@ -19,3 +19,5 @@ export RANLIB=${TOOLCHAIN_PREFIX}-ranlib
 export TOOLCHAIN_BASE=$TOOLCHAIN_BASE
 
 CXXFLAGS='-fPIC' scons platform=android
+cp ./libs/android/libjson_android_libmt.a $INSTALL_PREFIX/lib
+cp -r ./include/json $INSTALL_PREFIX/include/
