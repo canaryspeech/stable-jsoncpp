@@ -25,7 +25,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		5467AA6F1CA031150001A6B1 /* liblibjsoncpp_debug.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = liblibjsoncpp_debug.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		5467AA6F1CA031150001A6B1 /* libjsoncpp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libjsoncpp.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		5467AA7C1CA0319E0001A6B1 /* json */ = {isa = PBXFileReference; lastKnownFileType = folder; name = json; path = ../include/json; sourceTree = "<group>"; };
 		5467AA7E1CA031F10001A6B1 /* json_reader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = json_reader.cpp; path = ../src/lib_json/json_reader.cpp; sourceTree = "<group>"; };
 		5467AA7F1CA031F10001A6B1 /* json_tool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = json_tool.h; path = ../src/lib_json/json_tool.h; sourceTree = "<group>"; };
@@ -58,7 +58,7 @@
 		5467AA701CA031150001A6B1 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5467AA6F1CA031150001A6B1 /* liblibjsoncpp_debug.a */,
+				5467AA6F1CA031150001A6B1 /* libjsoncpp.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -107,7 +107,7 @@
 			);
 			name = "stable-jsoncpp";
 			productName = "stable-jsoncpp";
-			productReference = 5467AA6F1CA031150001A6B1 /* liblibjsoncpp_debug.a */;
+			productReference = 5467AA6F1CA031150001A6B1 /* libjsoncpp.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -238,7 +238,7 @@
 			buildSettings = {
 				HEADER_SEARCH_PATHS = ../include;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = libjsoncpp_debug;
+				PRODUCT_NAME = jsoncpp;
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
@@ -248,7 +248,7 @@
 			buildSettings = {
 				HEADER_SEARCH_PATHS = ../include;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = libjsoncpp;
+				PRODUCT_NAME = jsoncpp;
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
@@ -272,6 +272,7 @@
 				5467AA7A1CA031150001A6B1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
