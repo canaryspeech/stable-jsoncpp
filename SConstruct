@@ -18,34 +18,47 @@ options = Variables()
 options.Add( EnumVariable('platform',
                         'Platform (compiler/stl) used to build the project',
                         'msvc71',
-                        allowed_values='android suncc vacpp mingw msvc6 msvc7 msvc71 msvc80 msvc90 linux-gcc'.split(),
+                        allowed_values='android suncc vacpp mingw msvc6 msvc7 msvc71 msvc80 msvc90 linux'.split(),
                         ignorecase=2) )
+options.Add('host',
+            'specify the host triple that describes the target machine.  Platform will be inferred from it',
+            '')
 
-try:
-    platform = ARGUMENTS['platform']
-    if platform == 'linux-gcc':
-        CXX = 'g++' # not quite right, but env is not yet available.
-        import commands
-        version = commands.getoutput('%s -dumpversion' %CXX)
-        platform = 'linux-gcc-%s' %version
-        print "Using platform '%s'" %platform
-        LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH', '')
-        LD_LIBRARY_PATH = "%s:libs/%s" %(LD_LIBRARY_PATH, platform)
-        os.environ['LD_LIBRARY_PATH'] = LD_LIBRARY_PATH
-        print "LD_LIBRARY_PATH =", LD_LIBRARY_PATH
-    elif platform == 'android':
-        CXX = os.environ.get('CXX')
+host = ARGUMENTS.get('host', '')
 
-        import commands
-        version = commands.getoutput('%s -dumpversion' %CXX)
-        print "Using platform '%s'" %platform
-        LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH', '')
-        LD_LIBRARY_PATH = "%s:libs/%s" %(LD_LIBRARY_PATH, platform)
-        os.environ['LD_LIBRARY_PATH'] = LD_LIBRARY_PATH
-        print "LD_LIBRARY_PATH =", LD_LIBRARY_PATH
-except KeyError:
-    print 'You must specify a "platform"'
-    sys.exit(2)
+if host != '':
+    parts = host.split('-')
+    if len(parts) is not 4:
+        print("Malformed host identifier, expected 4 items '{0}'".format(host))
+        sys.exit(2)
+
+    platform = parts[2]
+    CXX = '{0}-g++'.format(host)
+else:
+    try:
+        platform = ARGUMENTS['platform']
+    except KeyError:
+        print 'You must specify a "platform"'
+        sys.exit(2)
+    CXX = 'g++' # not quite right, but env is not yet available.
+
+if platform == 'linux':
+    import commands
+    version = commands.getoutput('%s -dumpversion' %CXX)
+    platform = 'linux-gcc-%s' %version
+    print "Using platform '%s'" %platform
+    LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH', '')
+    LD_LIBRARY_PATH = "%s:libs/%s" %(LD_LIBRARY_PATH, platform)
+    os.environ['LD_LIBRARY_PATH'] = LD_LIBRARY_PATH
+    print "LD_LIBRARY_PATH =", LD_LIBRARY_PATH
+elif platform == 'android':
+    import commands
+    version = commands.getoutput('%s -dumpversion' %CXX)
+    print "Using platform '%s'" %platform
+    LD_LIBRARY_PATH = os.environ.get('LD_LIBRARY_PATH', '')
+    LD_LIBRARY_PATH = "%s:libs/%s" %(LD_LIBRARY_PATH, platform)
+    os.environ['LD_LIBRARY_PATH'] = LD_LIBRARY_PATH
+    print "LD_LIBRARY_PATH =", LD_LIBRARY_PATH
 
 print "Building using PLATFORM =", platform
 
@@ -141,6 +154,13 @@ elif platform.startswith('linux-gcc'):
     env.Tool( 'default' )
     env.Append( LIBS = ['pthread'], CCFLAGS = os.environ.get("CXXFLAGS", "-Wall"), LINKFLAGS=os.environ.get("LDFLAGS", "") )
     env['SHARED_LIB_ENABLED'] = True
+    if host != '':
+        env.Replace(CC = '{0}-gcc'.format(host))
+        env.Replace(AR = '{0}-ar'.format(host))
+        env.Replace(AS = '{0}-as'.format(host))
+        env.Replace(CXX = '{0}-g++'.format(host))
+        env.Replace(LD = '{0}-ld'.format(host))
+        env.Replace(RANLIB = '{0}-ranlib'.format(host))
 elif platform == 'android':
     env.Tool( 'default' )
     # android toolchain has pthread built in.
@@ -270,7 +290,7 @@ env.Alias( 'src-dist', srcdist_cmd )
 
 build_tests = True
 # we do not build and run tests for android.
-if platform == 'android': build_tests=False
+if platform == 'android' or host != '': build_tests=False
 
 if build_tests: buildProjectInDirectory( 'src/jsontestrunner' )
 buildProjectInDirectory( 'src/lib_json' )
