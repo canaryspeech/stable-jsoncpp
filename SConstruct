@@ -25,17 +25,17 @@ options.Add('host',
             '')
 
 host = ARGUMENTS.get('host', '')
+platform = ARGUMENTS.get('platform', '')
 
 if host != '':
     parts = host.split('-')
 
     # The platform identifier is always the second to last part of the host string (which can be 3 or 4 items long)
-    platform = parts[len(parts) - 2]
+    if platform == '':
+        platform = parts[len(parts) - 2]
     CXX = '{0}-g++'.format(host)
 else:
-    try:
-        platform = ARGUMENTS['platform']
-    except KeyError:
+    if platform == '':
         print 'You must specify a "platform"'
         sys.exit(2)
     CXX = 'g++' # not quite right, but env is not yet available.
@@ -85,15 +85,14 @@ def make_environ_vars():
 		    vars[name] = os.environ[name]
     return vars
 
-def append_android_vars(platform, env):
-    if platform == 'android':
-        env.Replace(CC = os.environ.get('CC'))
-        env.Replace(AR = os.environ.get('AR'))
-        env.Replace(AS = os.environ.get('AS'))
-        env.Replace(CXX = os.environ.get('CXX'))
-        env.Replace(LD = os.environ.get('LD'))
-        env.Replace(RANLIB = os.environ.get('RANLIB'))
-
+def update_cross_compilers(env, host):
+    if host != '':
+        env.Replace(CC = '{0}-gcc'.format(host))
+        env.Replace(AR = '{0}-ar'.format(host))
+        env.Replace(AS = '{0}-as'.format(host))
+        env.Replace(CXX = '{0}-g++'.format(host))
+        env.Replace(LD = '{0}-ld'.format(host))
+        env.Replace(RANLIB = '{0}-ranlib'.format(host))
 
 env = Environment( ENV = make_environ_vars(),
                    toolpath = ['scons-tools'],
@@ -152,19 +151,13 @@ elif platform.startswith('linux-gcc'):
     env.Tool( 'default' )
     env.Append( LIBS = ['pthread'], CCFLAGS = os.environ.get("CXXFLAGS", "-Wall"), LINKFLAGS=os.environ.get("LDFLAGS", "") )
     env['SHARED_LIB_ENABLED'] = True
-    if host != '':
-        env.Replace(CC = '{0}-gcc'.format(host))
-        env.Replace(AR = '{0}-ar'.format(host))
-        env.Replace(AS = '{0}-as'.format(host))
-        env.Replace(CXX = '{0}-g++'.format(host))
-        env.Replace(LD = '{0}-ld'.format(host))
-        env.Replace(RANLIB = '{0}-ranlib'.format(host))
+    update_cross_compilers(env, host)
 elif platform == 'android':
     env.Tool( 'default' )
     # android toolchain has pthread built in.
     env.Append( CCFLAGS = os.environ.get("CXXFLAGS", "-Wall"), LINKFLAGS=os.environ.get("LDFLAGS", "") )
     env['SHARED_LIB_ENABLED'] = False
-    append_android_vars(platform, env)
+    update_cross_compilers(env, host)
 else:
     print "UNSUPPORTED PLATFORM."
     env.Exit(1)
