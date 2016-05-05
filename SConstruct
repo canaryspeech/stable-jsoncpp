@@ -28,11 +28,9 @@ host = ARGUMENTS.get('host', '')
 
 if host != '':
     parts = host.split('-')
-    if len(parts) is not 4:
-        print("Malformed host identifier, expected 4 items '{0}'".format(host))
-        sys.exit(2)
 
-    platform = parts[2]
+    # The platform identifier is always the second to last part of the host string (which can be 3 or 4 items long)
+    platform = parts[len(parts) - 2]
     CXX = '{0}-g++'.format(host)
 else:
     try:
