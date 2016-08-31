@@ -33,7 +33,10 @@ if host != '':
     # The platform identifier is always the second to last part of the host string (which can be 3 or 4 items long)
     if platform == '':
         platform = parts[len(parts) - 2]
-    CXX = '{0}-g++'.format(host)
+    if platform == 'android':
+        CXX = '{0}-clang++'.format(host)
+    else:
+        CXX = '{0}-g++'.format(host)
 else:
     if platform == '':
         print 'You must specify a "platform"'
@@ -87,10 +90,14 @@ def make_environ_vars():
 
 def update_cross_compilers(env, host):
     if host != '':
-        env.Replace(CC = '{0}-gcc'.format(host))
         env.Replace(AR = '{0}-ar'.format(host))
         env.Replace(AS = '{0}-as'.format(host))
-        env.Replace(CXX = '{0}-g++'.format(host))
+        if platform == 'android':
+            env.Replace(CC = '{0}-clang'.format(host))
+            env.Replace(CXX = '{0}-clang++'.format(host))
+        else:
+            env.Replace(CC = '{0}-gcc'.format(host))
+            env.Replace(CXX = '{0}-g++'.format(host))
         env.Replace(LD = '{0}-ld'.format(host))
         env.Replace(RANLIB = '{0}-ranlib'.format(host))
 
