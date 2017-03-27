@@ -162,7 +162,8 @@ elif platform.startswith('linux-gcc'):
 elif platform == 'android':
     env.Tool( 'default' )
     # android toolchain has pthread built in.
-    env.Append( CCFLAGS = os.environ.get("CXXFLAGS", "-Wall"), LINKFLAGS=os.environ.get("LDFLAGS", "") )
+    env.Append( CCFLAGS = os.environ.get("CXXFLAGS", "-Wall -fPIC -mhard-float -D_NDK_MATH_NO_SOFTFP=1 -mfpu=neon -mfloat-abi=hard"),
+               LINKFLAGS=os.environ.get("LDFLAGS", "") )
     env['SHARED_LIB_ENABLED'] = False
     update_cross_compilers(env, host)
 else:
